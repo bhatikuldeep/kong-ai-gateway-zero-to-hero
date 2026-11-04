@@ -5,6 +5,8 @@ export
 API := https://$(KONNECT_REGION).api.konghq.com
 GATEWAY := acme-ai-gateway
 COMPOSE := docker compose --env-file ../.env
+# Stopping must work even before `make endpoints` has run (for example after a failed apply).
+COMPOSE_STOP := KONG_CLUSTER_CONTROL_PLANE=$${KONG_CLUSTER_CONTROL_PLANE:-not-set} $(COMPOSE)
 
 .PHONY: help check certs key apply endpoints up test down down-all
 help:          ## list targets
@@ -43,8 +45,8 @@ test:          ## assert the setup works (no key -> 401, key -> answer from the 
 	@scripts/test.sh
 
 down:          ## stop containers; Konnect stays as it is
-	$(COMPOSE) down
+	$(COMPOSE_STOP) down
 
 down-all:      ## remove everything: containers, model volume and the gateway in Konnect
-	$(COMPOSE) down -v
+	-$(COMPOSE_STOP) down -v
 	@scripts/delete-gateway.sh
