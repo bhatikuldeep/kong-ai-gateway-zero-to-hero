@@ -16,12 +16,18 @@ Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati
 cp .env.example .env          # add your KONNECT_TOKEN and region
 mise install
 cd setup
-make apply                    # create Acme's AI Gateway in Konnect (shows the changes first)
-make up                       # start the containers (the first start downloads the model)
+make up                       # start everything (the first run shows the Konnect changes and asks to confirm)
 make test                     # check that everything works
 ```
 
-`make down` stops the containers. `make clean` removes everything: the containers, the downloaded model and the gateway in Konnect. `make help` lists all commands.
+Every episode uses the same four commands:
+
+| Command | What it does |
+|---|---|
+| `make up` | Start everything. Safe to run again |
+| `make test` | Check that everything works |
+| `make down` | Stop the containers |
+| `make clean` | Remove everything: containers, downloaded model and the gateway in Konnect |
 
 If port 8000 is already used on your machine, set another one in `GATEWAY_PORT` in `.env`.
 
