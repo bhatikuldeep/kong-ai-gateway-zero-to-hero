@@ -55,6 +55,12 @@ services:
       KONG_LUA_SSL_TRUSTED_CERTIFICATE: system
     volumes:
       - ./certs:/certs:ro
+    # The image checks health every 60 s, so `make up` would wait a minute for a gateway that is ready in seconds.
+    healthcheck:
+      test: ["CMD-SHELL", "kong-health"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
 
 volumes:
   ollama: {}
