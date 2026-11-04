@@ -11,7 +11,7 @@ COMPOSE_STOP := KONG_CLUSTER_CONTROL_PLANE=not-set $(COMPOSE)
 
 .PHONY: help check certs key apply endpoints up test down clean
 help:          ## list targets
-	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
+	@grep -hE '^[a-z-]+:.*## ' $(firstword $(MAKEFILE_LIST)) | sed -E 's/:.*## / /' | awk '{t=$$1; $$1=""; printf "  make %-10s%s\n", t, $$0}'
 
 check:         ## check the tools, Docker and .env are ready
 	@command -v kongctl >/dev/null || { echo "kongctl missing: run 'mise install'"; exit 1; }
