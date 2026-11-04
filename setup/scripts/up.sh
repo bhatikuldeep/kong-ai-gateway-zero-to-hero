@@ -41,6 +41,8 @@ set_env KONG_CLUSTER_SERVER_NAME "${cp_host}"
 set_env KONG_CLUSTER_TELEMETRY_ENDPOINT "${tp_host}:443"
 set_env KONG_CLUSTER_TELEMETRY_SERVER_NAME "${tp_host}"
 
-# 5. The containers (the first start downloads the model)
+# 5. The containers (the first start downloads the model).
+#    Re-read .env first: values loaded in step 1 are stale, and they would override the file in Compose.
+set -a; source "$env_file"; set +a
 docker compose --env-file "$env_file" up -d --wait
 echo "Ready: run 'make test'"
