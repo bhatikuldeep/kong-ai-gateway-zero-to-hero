@@ -27,9 +27,11 @@ key:           ## generate the shop app's API key into ../.env (once)
 	@echo "SHOP_APP_KEY set in ../.env"
 
 apply: check certs key   ## create or update Acme's AI Gateway in Konnect (shows the plan first)
+	@# Re-read ../.env here: `make key` may have just written SHOP_APP_KEY, after make loaded the file.
 	@# --base-dir: !file may read only inside setup/ (the certificate is in setup/certs)
-	kongctl plan --mode apply -f konnect/ai-gateway.yaml --base-dir . --pat "$(KONNECT_TOKEN)" --region $(KONNECT_REGION) --output-file plan.json
-	kongctl apply --plan plan.json --pat "$(KONNECT_TOKEN)" --region $(KONNECT_REGION)
+	@set -a; . ../.env; set +a; \
+	  kongctl plan --mode apply -f konnect/ai-gateway.yaml --base-dir . --pat "$$KONNECT_TOKEN" --region "$$KONNECT_REGION" --output-file plan.json && \
+	  kongctl apply --plan plan.json --pat "$$KONNECT_TOKEN" --region "$$KONNECT_REGION"; rc=$$?; rm -f plan.json; exit $$rc
 
 endpoints:     ## write the gateway's data plane endpoints into ../.env
 	@scripts/endpoints.sh
