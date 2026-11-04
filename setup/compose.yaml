@@ -6,12 +6,30 @@ services:
   ollama:
     image: ollama/ollama:0.40.14@sha256:ebaef4f4c5d93660e1f25f8ad085a112f51ccfb0e8458073e71793959dba91c9
     restart: unless-stopped
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m                 # keep the model loaded between calls
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      LLM_MODEL: ${LLM_MODEL:-qwen2.5:0.5b}  # only these two values from .env; never the Konnect token
+      OLLAMA_NUM_THREAD: ${OLLAMA_NUM_THREAD:-4}
+    # Pull the model, then re-create it under the same name with a fixed thread count. Left alone, Ollama
+    # starts one thread per CPU the container sees and generation collapses to about 1 token/s; with 4 threads
+    # it ran at 175-205 tokens/s on the same machine.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve & until ollama list >/dev/null 2>&1; do sleep 1; done
+        ollama pull "$${LLM_MODEL}"
+        ollama show "$${LLM_MODEL}" --modelfile | grep -q num_thread || {
+          ollama cp "$${LLM_MODEL}" acme-base &&
+          printf 'FROM acme-base\nPARAMETER num_thread %s\n' "$${OLLAMA_NUM_THREAD}" | ollama create "$${LLM_MODEL}" -f /dev/stdin; }
+        touch /tmp/ready; wait
     volumes:
       - ollama:/root/.ollama
     healthcheck:
-      test: ["CMD", "ollama", "list"]
+      test: ["CMD", "test", "-f", "/tmp/ready"]
       interval: 5s
-      retries: 20
+      retries: 120                           # the first start downloads the model
 
   kong:
     # Must match the AI Gateway control plane version in Konnect. Tag and digest pinned together.

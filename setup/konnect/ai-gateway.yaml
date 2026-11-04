@@ -55,7 +55,7 @@ ai_gateways:
         access:
           auth_strategies: [setup-key-auth]
         targets:
-          - name: llama3.2:1b
+          - name: qwen2.5:0.5b              # same as LLM_MODEL in .env
             provider: setup-ollama
             config:
               type: ollama

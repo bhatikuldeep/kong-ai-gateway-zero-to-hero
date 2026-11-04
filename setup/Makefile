@@ -34,9 +34,8 @@ apply: check certs key   ## create or update Acme's AI Gateway in Konnect (shows
 endpoints:     ## write the gateway's data plane endpoints into ../.env
 	@scripts/endpoints.sh
 
-up: endpoints  ## start the data plane and Ollama, pull the model
-	$(COMPOSE) up -d
-	$(COMPOSE) exec ollama ollama pull $(LLM_MODEL)
+up: endpoints  ## start the data plane and Ollama (Ollama pulls and tunes the model on first start)
+	$(COMPOSE) up -d --wait
 
 test:          ## assert the setup works (no key -> 401, key -> answer from the local model)
 	@scripts/test.sh
