@@ -6,7 +6,9 @@ env_file=../.env
 set_env() { sed -i.bak "s#^$1=.*#$1=$2#" "$env_file" && rm -f "$env_file.bak"; }
 
 # 1. Tools, Docker and the Konnect token
-command -v kongctl >/dev/null || { echo "kongctl not found: run 'mise install' in the repository root"; exit 1; }
+for tool in kongctl jq; do
+  command -v "$tool" >/dev/null || { echo "$tool not found: install mise, then run 'mise install' in the repository root"; exit 1; }
+done
 docker info >/dev/null 2>&1 || { echo "Docker is not running"; exit 1; }
 set -a; source "$env_file"; set +a
 [ -n "${KONNECT_TOKEN:-}" ] || { echo "Set KONNECT_TOKEN in .env"; exit 1; }
