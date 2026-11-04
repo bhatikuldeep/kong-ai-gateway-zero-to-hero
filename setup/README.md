@@ -1,6 +1,8 @@
 # 000 Setup
 
-Creates Acme's AI Gateway in Konnect and runs its data plane on your laptop, with a local model.
+Creates Acme's AI Gateway in Konnect and runs a self-hosted data plane for it in Docker, with Ollama serving the model next to the gateway.
+
+Run these commands in this folder (`setup/`), after the one-time steps in the [main README](../README.md#start-here-000-setup):
 
 | Command | What it does |
 |---|---|
@@ -13,13 +15,13 @@ Creates Acme's AI Gateway in Konnect and runs its data plane on your laptop, wit
 
 In Konnect (kongctl namespace `acme`):
 - **AI Gateway** `acme-ai-gateway`, with this data plane's certificate;
-- **model provider** `setup-ollama` (the local Ollama);
+- **model provider** `setup-ollama` (Ollama, next to the gateway);
 - **auth strategy** `setup-key-auth` (API keys in the `apikey` header);
 - **model** `acme-chat` at `/v1`, served by `qwen2.5:0.5b`;
 - **consumer** `shop-app` with its key (stored as `SHOP_APP_KEY` in `.env`).
 
-On your laptop (Docker Compose project `acme-aigw`):
-- `kong`: the Kong AI Gateway 2.3 data plane, on `127.0.0.1:8000`;
+In Docker (Compose project `acme-aigw`):
+- `kong`: the Kong AI Gateway 2.3 data plane, on `127.0.0.1:8000` (`GATEWAY_PORT` in `.env`);
 - `ollama`: the model server, reachable only by the gateway.
 
 ## Files

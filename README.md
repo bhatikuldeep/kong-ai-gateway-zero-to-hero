@@ -1,6 +1,6 @@
 # Kong AI Gateway, from first call to production
 
-Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati.com). Each episode is one use case on Kong AI Gateway 2.x with Konnect, a local data plane in Docker and a local model, so you can try it on a laptop in about 15 minutes and remove it again.
+Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati.com). Each episode is one use case on Kong AI Gateway 2.x: Konnect as the control plane, a self-hosted data plane in Docker, and an open model served by Ollama next to the gateway. An episode takes about 15 minutes to run, and `make clean` removes it again.
 
 > A personal series. Views are my own; this is not official Kong documentation.
 
@@ -20,7 +20,7 @@ make up                       # start everything (the first run shows the Konnec
 make test                     # check that everything works
 ```
 
-Every episode uses the same four commands:
+Every episode has its own folder and the same four commands. Run them inside that folder (for 000, `setup/`):
 
 | Command | What it does |
 |---|---|
@@ -29,19 +29,21 @@ Every episode uses the same four commands:
 | `make down` | Stop the containers |
 | `make clean` | Remove everything: containers, downloaded model and the gateway in Konnect |
 
-If port 8000 is already used on your machine, set another one in `GATEWAY_PORT` in `.env`.
+If port 8000 is already in use, set another port in `GATEWAY_PORT` in `.env` and run `make up` again.
 
 ## Episodes
 
-| Episode | Folder | Post |
+| Episode | Folder | Status |
 |---|---|---|
-| 000 Setup | [`setup/`](setup/) | coming soon |
+| 000 Setup | [`setup/`](setup/) | Ready to run. The post is being written |
 
 The fictional company in every episode is **Acme**, an online retailer. Its people, teams and systems stay the same across the series.
 
 ## Troubleshooting
 
-- **`make test` says there's no Kong gateway on port 8000:** run `make up`. If another program already uses port 8000, set `GATEWAY_PORT` in `.env` and run `make up` again.
+Run the commands below in the episode's folder (`setup/` for 000).
+
+- **`make test` says there's no Kong gateway on the port:** run `make up`. If another program already uses port 8000, set `GATEWAY_PORT` in `.env` and run `make up` again.
 - **The first answer takes a second or two:** the model is loading. Later answers take a few hundred milliseconds.
 - **The gateway logs show `dynamic_pricing: ... ignored unknown field` notices:** they're harmless. AI Gateway 2.3 fetches Konnect's model price list every minute and skips fields it doesn't know yet.
 - **`make up` asks you to type `yes`:** it shows what it will create or change in Konnect first. Later runs skip this when nothing changed.
@@ -50,7 +52,7 @@ The fictional company in every episode is **Acme**, an online retailer. Its peop
 
 - Every tool and image is pinned to an exact version: tools in `mise.toml` and `mise.lock`, container images by tag and digest, CI actions by commit. Versions change on purpose, in one commit, never by themselves.
 - Each episode keeps its Konnect resources in its own kongctl namespace (`acme-<episode>`), so `make clean` in one episode removes only what that episode created.
-- Ollama is the default model and needs no paid keys. Where an episode needs a paid provider, the post says so in a "Cost to run" line.
+- Ollama serves the default model and needs no paid keys. Where an episode needs a paid provider, the post says so in a "Cost to run" line.
 - Nothing from a real organisation is committed: `.env`, keys and certificates are git-ignored, and CI runs gitleaks.
 
 ## Licence

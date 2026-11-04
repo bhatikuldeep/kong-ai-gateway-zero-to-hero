@@ -13,13 +13,13 @@ ai_gateways:
 
     data_plane_certificates:
       - ref: setup-dp-cert
-        title: setup-local-dp
+        title: setup-dp
         cert: !file ../certs/tls.crt
 
     model_providers:
       - ref: setup-ollama
         name: setup-ollama
-        display_name: Ollama (local)
+        display_name: Ollama
         type: ollama
         config:
           auth:
@@ -37,7 +37,7 @@ ai_gateways:
     models:
       - ref: setup-chat
         name: setup-chat
-        display_name: Acme chat (local)
+        display_name: Acme chat
         type: model
         enabled: true
         capabilities: [generate]
@@ -46,7 +46,7 @@ ai_gateways:
         config:
           balancer:
             algorithm: round-robin
-            read_timeout: 120000           # ms; a small model on a laptop CPU can be slow on first call
+            read_timeout: 120000           # ms; a small model on CPU can be slow on first call
           route:
             paths: [/v1]
             model:

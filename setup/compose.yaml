@@ -1,4 +1,4 @@
-# 000 Setup: the shared local stack. A Kong AI Gateway data plane connected to Konnect, and Ollama.
+# 000 Setup: the shared stack. A Kong AI Gateway data plane connected to Konnect, and Ollama.
 # Later episodes add services with compose profiles; this file stays the base.
 name: acme-aigw
 
@@ -39,10 +39,10 @@ services:
       ollama:
         condition: service_healthy
     ports:
-      - "127.0.0.1:${GATEWAY_PORT:-8000}:8000"   # the gateway, local only; change GATEWAY_PORT in .env if 8000 is taken
+      - "127.0.0.1:${GATEWAY_PORT:-8000}:8000"   # reachable from this host only; change GATEWAY_PORT in .env if 8000 is taken
     environment:
       KONG_ROLE: data_plane
-      KONG_NGINX_WORKER_PROCESSES: "2"      # two workers are plenty for one laptop (the default is one per CPU)
+      KONG_NGINX_WORKER_PROCESSES: "2"      # two workers are plenty here (the default is one per CPU)
       KONG_DATABASE: "off"
       KONG_KONNECT_MODE: "on"
       KONG_CLUSTER_MTLS: pki
