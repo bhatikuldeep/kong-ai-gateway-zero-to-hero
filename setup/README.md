@@ -2,7 +2,7 @@
 
 Creates Acme's AI Gateway in Konnect and runs a self-hosted data plane for it in Docker, with Ollama serving the model next to the gateway.
 
-Run these commands in this folder (`setup/`), after the one-time steps in the [main README](../README.md#start-here-000-setup):
+Run these commands in this folder (`setup/`), after the one-time steps in the [main README](../README.md#quick-start):
 
 | Command | What it does |
 |---|---|

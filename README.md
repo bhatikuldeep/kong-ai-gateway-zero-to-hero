@@ -10,17 +10,34 @@ Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati
 - A Konnect account with AI Gateway ([pricing and plans](https://konghq.com/pricing))
 - [mise](https://mise.jdx.dev), which installs the pinned tools (`kongctl` 1.25.0, `jq` 1.8.2, `gitleaks` 8.30.1; checksums in `mise.lock`). The `make` commands use them through mise, so you don't need to activate it in your shell
 
-## Start here: 000 Setup
+## How episodes work
 
-```bash
-cp .env.example .env          # add your KONNECT_TOKEN and region
-mise install
-cd setup
-make up                       # start everything (the first run shows the Konnect changes and asks to confirm)
-make test                     # check that everything works
-```
+- Each episode is a folder. You go into it and use four `make` commands.
+- Episode 000 lives in `setup/`. It creates the AI Gateway that every later episode builds on, so run it first.
+- `.env` in the repository root holds your Konnect token and settings for all episodes.
 
-Every episode has its own folder and the same four commands. Run them inside that folder (for 000, `setup/`):
+## Quick start
+
+1. Once, in the repository root:
+
+   ```bash
+   cp .env.example .env    # then add your KONNECT_TOKEN and KONNECT_REGION
+   mise install
+   ```
+
+2. Run episode 000:
+
+   ```bash
+   cd setup
+   make up                 # the first run shows the Konnect changes and asks you to type yes
+   make test               # check that everything works
+   ```
+
+3. When you're done, still in `setup/`: `make down` stops the containers, `make clean` removes everything.
+
+## The four commands
+
+The same in every episode folder:
 
 | Command | What it does |
 |---|---|
@@ -41,7 +58,7 @@ The fictional company in every episode is **Acme**, an online retailer. Its peop
 
 ## Troubleshooting
 
-Run the commands below in the episode's folder (`setup/` for 000).
+Run these in the episode's folder (`setup/` for 000).
 
 - **`make test` says there's no Kong gateway on the port:** run `make up`. If another program already uses port 8000, set `GATEWAY_PORT` in `.env` and run `make up` again.
 - **The first answer takes a second or two:** the model is loading. Later answers take a few hundred milliseconds.
