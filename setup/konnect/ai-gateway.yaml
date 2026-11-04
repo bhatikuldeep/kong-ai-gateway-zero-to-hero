@@ -9,6 +9,7 @@ ai_gateways:
     name: acme-ai-gateway
     display_name: Acme AI Gateway
     deployment_type: hybrid
+    min_runtime_version: "2.3"             # must match the data plane image in compose.yaml
 
     data_plane_certificates:
       - ref: setup-dp-cert

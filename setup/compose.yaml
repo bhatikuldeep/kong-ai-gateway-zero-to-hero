@@ -24,6 +24,7 @@ services:
       - "127.0.0.1:8000:8000"               # the gateway, local only
     environment:
       KONG_ROLE: data_plane
+      KONG_NGINX_WORKER_PROCESSES: "2"      # two workers are plenty for one laptop (the default is one per CPU)
       KONG_DATABASE: "off"
       KONG_KONNECT_MODE: "on"
       KONG_CLUSTER_MTLS: pki

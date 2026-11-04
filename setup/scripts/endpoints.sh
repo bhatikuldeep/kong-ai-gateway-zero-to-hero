@@ -11,6 +11,7 @@ gw=$(curl -sf -H "Authorization: Bearer ${KONNECT_TOKEN}" "${api}/v1/ai-gateways
 cp_host=$(jq -r '.endpoints.configuration' <<<"$gw" | sed 's#^https://##; s#/.*##')
 tp_host=$(jq -r '.endpoints.telemetry' <<<"$gw" | sed 's#^https://##; s#/.*##')
 set_env() { sed -i.bak "s#^$1=.*#$1=$2#" ../.env && rm -f ../.env.bak; }
+set_env AI_GATEWAY_ID "$(jq -r '.id' <<<"$gw")"   # episodes attach to this gateway with !lookup
 set_env KONG_CLUSTER_CONTROL_PLANE "${cp_host}:443"
 set_env KONG_CLUSTER_SERVER_NAME "${cp_host}"
 set_env KONG_CLUSTER_TELEMETRY_ENDPOINT "${tp_host}:443"
