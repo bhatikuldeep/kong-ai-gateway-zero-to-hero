@@ -16,12 +16,14 @@ Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati
 cp .env.example .env          # add your KONNECT_TOKEN and region
 mise install
 cd setup
-make apply                    # creates Acme's AI Gateway in Konnect (shows the plan first)
-make up                       # starts the data plane and Ollama, pulls the model
-make test                     # no key -> 401, shop-app key -> an answer from the local model
+make apply                    # create Acme's AI Gateway in Konnect (shows the changes first)
+make up                       # start the containers (the first start downloads the model)
+make test                     # check that everything works
 ```
 
-`make down` stops the containers. `make down-all` also deletes the gateway in Konnect.
+`make down` stops the containers. `make clean` removes everything: the containers, the downloaded model and the gateway in Konnect. `make help` lists all commands.
+
+If port 8000 is already used on your machine, set another one in `GATEWAY_PORT` in `.env`.
 
 ## Episodes
 

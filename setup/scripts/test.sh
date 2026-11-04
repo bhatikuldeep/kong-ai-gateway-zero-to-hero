@@ -3,9 +3,16 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 source ../.env
-url=http://127.0.0.1:8000/v1/chat/completions
+port=${GATEWAY_PORT:-8000}
+url=http://127.0.0.1:${port}/v1/chat/completions
 body='{"model": "acme-chat", "messages": [{"role": "user", "content": "Name one HTTP method."}]}'
 fail=0
+
+# Make sure it's Kong answering on the port, not another program.
+if ! curl -s -o /dev/null -D - --max-time 5 "http://127.0.0.1:${port}/" | grep -qi '^x-kong-'; then
+  echo "FAIL  no Kong gateway on port ${port}. Is 'make up' running? If another program uses the port, set GATEWAY_PORT in .env."
+  exit 1
+fi
 check() { if [ "$2" = "$3" ]; then echo "PASS  $1"; else echo "FAIL  $1 (expected $3, got $2)"; fail=1; fi; }
 
 code=$(curl -s -o /dev/null -w '%{http_code}' $url -H 'content-type: application/json' -d "$body")
