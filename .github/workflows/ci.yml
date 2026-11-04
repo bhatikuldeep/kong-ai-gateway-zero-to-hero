@@ -1,0 +1,20 @@
+name: ci
+on: [pull_request, push]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { fetch-depth: 0 }
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c  # v5.2.6
+      - name: No secrets committed
+        run: gitleaks git --redact --exit-code 1 .
+      - name: Compose files are valid
+        run: |
+          cp .env.example .env
+          sed -i 's/^KONG_CLUSTER_CONTROL_PLANE=.*/KONG_CLUSTER_CONTROL_PLANE=ci.invalid:443/' .env
+          docker compose --env-file .env -f setup/compose.yaml config -q
+      - name: Shell scripts parse
+        run: for f in setup/scripts/*.sh; do bash -n "$f"; done

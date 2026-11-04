@@ -1,0 +1,40 @@
+# 000 Setup: the shared local stack. A Kong AI Gateway data plane connected to Konnect, and Ollama.
+# Later episodes add services with compose profiles; this file stays the base.
+name: acme-aigw
+
+services:
+  ollama:
+    image: ollama/ollama:0.40.11            # pin by digest after the first pull (see README)
+    restart: unless-stopped
+    volumes:
+      - ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      retries: 20
+
+  kong:
+    image: kong/kong-ai-gateway:${AIGW_VERSION:-2.3.0}   # must match the control plane version (make version)
+    restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"               # the gateway, local only
+    environment:
+      KONG_ROLE: data_plane
+      KONG_DATABASE: "off"
+      KONG_KONNECT_MODE: "on"
+      KONG_CLUSTER_MTLS: pki
+      KONG_CLUSTER_CONTROL_PLANE: ${KONG_CLUSTER_CONTROL_PLANE:?run make endpoints}
+      KONG_CLUSTER_SERVER_NAME: ${KONG_CLUSTER_SERVER_NAME}
+      KONG_CLUSTER_TELEMETRY_ENDPOINT: ${KONG_CLUSTER_TELEMETRY_ENDPOINT}
+      KONG_CLUSTER_TELEMETRY_SERVER_NAME: ${KONG_CLUSTER_TELEMETRY_SERVER_NAME}
+      KONG_CLUSTER_CERT: /certs/tls.crt
+      KONG_CLUSTER_CERT_KEY: /certs/tls.key
+      KONG_LUA_SSL_TRUSTED_CERTIFICATE: system
+    volumes:
+      - ./certs:/certs:ro
+
+volumes:
+  ollama: {}

@@ -1,0 +1,42 @@
+# Kong AI Gateway, from first call to production
+
+Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati.com). Each episode is one use case on Kong AI Gateway 2.x with Konnect, a local data plane in Docker and a local model, so you can try it on a laptop in about 15 minutes and remove it again.
+
+> A personal series. Views are my own; this is not official Kong documentation.
+
+## What you need
+
+- Docker (Docker Desktop on macOS or Windows with WSL; Docker Engine on Linux), about 4 GB free RAM for the local model
+- A Konnect account with AI Gateway ([pricing and plans](https://konghq.com/pricing))
+- [mise](https://mise.jdx.dev) for the pinned tools (`kongctl`, `jq`, `gitleaks`), or install them yourself
+
+## Start here: 000 Setup
+
+```bash
+cp .env.example .env          # add your KONNECT_TOKEN and region
+mise install
+cd setup
+make apply                    # creates Acme's AI Gateway in Konnect (shows the plan first)
+make up                       # starts the data plane and Ollama, pulls the model
+make test                     # no key -> 401, shop-app key -> an answer from the local model
+```
+
+`make down` stops the containers. `make down-all` also deletes the gateway in Konnect.
+
+## Episodes
+
+| Episode | Folder | Post |
+|---|---|---|
+| 000 Setup | `setup/` | coming soon |
+
+The fictional company in every episode is **Acme**, an online retailer. Its people, teams and systems stay the same across the series.
+
+## Rules every episode follows
+
+- Each episode adds its own resources to Acme's gateway with names prefixed by its id (`llm02-...`), and `make down` removes only those. Episodes never use `kongctl sync`, which would delete other episodes' resources.
+- Ollama is the default model and needs no paid keys. Where an episode needs a paid provider, the post says so in a "Cost to run" line.
+- Nothing from a real organisation is committed: `.env`, keys and certificates are git-ignored, and CI runs gitleaks.
+
+## Licence
+
+Code: [Apache-2.0](LICENSE). Text in the posts and READMEs: [CC BY 4.0](LICENSE-docs).

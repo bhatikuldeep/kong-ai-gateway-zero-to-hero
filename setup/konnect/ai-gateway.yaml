@@ -1,0 +1,74 @@
+# 000 Setup: Acme's AI Gateway in Konnect, applied with kongctl (apply only, never sync).
+# Every later episode adds its own resources to this gateway, prefixed with the episode id.
+_defaults:
+  kongctl:
+    namespace: acme
+
+ai_gateways:
+  - ref: acme
+    name: acme-ai-gateway
+    display_name: Acme AI Gateway
+    deployment_type: hybrid
+
+    data_plane_certificates:
+      - ref: setup-dp-cert
+        title: setup-local-dp
+        cert: !file ../certs/tls.crt
+
+    model_providers:
+      - ref: setup-ollama
+        name: setup-ollama
+        display_name: Ollama (local)
+        type: ollama
+        config:
+          auth:
+            type: basic
+
+    auth_strategies:
+      - ref: setup-key-auth
+        name: setup-key-auth
+        display_name: API key
+        type: key-auth
+        config:
+          key_names: [apikey]
+          hide_credentials: true
+
+    models:
+      - ref: setup-chat
+        name: setup-chat
+        display_name: Acme chat (local)
+        type: model
+        enabled: true
+        capabilities: [generate]
+        formats:
+          - type: openai
+        config:
+          balancer:
+            algorithm: round-robin
+            read_timeout: 120000           # ms; a small model on a laptop CPU can be slow on first call
+          route:
+            paths: [/v1]
+            model:
+              body_param: model
+              values: [acme-chat]          # what apps ask for; the gateway decides what answers
+        access:
+          auth_strategies: [setup-key-auth]
+        targets:
+          - name: llama3.2:1b
+            provider: setup-ollama
+            config:
+              type: ollama
+              upstream_url: http://ollama:11434
+
+    consumers:
+      - ref: shop-app
+        name: shop-app
+        display_name: Shop app
+        type: api-key
+        credentials:
+          - ref: shop-app-key
+            name: shop-app-key
+            display_name: Shop app key
+            type: api-key
+            api_key: !secret {source: !env SHOP_APP_KEY}
+            ttl: 0

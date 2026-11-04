@@ -1,0 +1,7 @@
+# Secrets and per-run files: never committed
+.env
+*.key
+*.pem
+setup/certs/
+plan*.json
+.DS_Store
