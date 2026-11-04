@@ -6,7 +6,7 @@ Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati
 
 | Episode | Folder | Status |
 |---|---|---|
-| 000 Setup | [`setup/`](setup/) | Ready to run. The post is being written |
+| 000 Setup | [`000-setup/`](000-setup/) | Ready to run. The post is being written |
 
 > A personal series. Views are my own; this is not official Kong documentation.
 
@@ -25,10 +25,10 @@ Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati
    mise install
    ```
 
-2. Run episode 000. It creates the AI Gateway that every later episode builds on:
+2. Run episode 000 Setup. It creates the AI Gateway that every later episode builds on:
 
    ```bash
-   cd setup
+   cd 000-setup
    make up      # shows the Konnect changes and asks you to confirm
    make test    # checks that everything works
    ```

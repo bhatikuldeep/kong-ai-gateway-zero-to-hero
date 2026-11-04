@@ -20,7 +20,7 @@ mkdir -p certs
 [ -n "${SHOP_APP_KEY:-}" ] || { set_env SHOP_APP_KEY "$(openssl rand -hex 16)"; set -a; source "$env_file"; set +a; }
 
 # 3. Acme's AI Gateway in Konnect: show the changes, then apply them
-#    (--base-dir lets !file read the certificate in setup/certs and nothing outside setup/)
+#    (--base-dir lets !file read the certificate in 000-setup/certs and nothing outside 000-setup/)
 kongctl plan --mode apply -f konnect/ai-gateway.yaml --base-dir . \
   --pat "$KONNECT_TOKEN" --region "$KONNECT_REGION" --output-file plan.json
 if [ "$(jq '.summary.total_changes' plan.json)" -gt 0 ]; then
