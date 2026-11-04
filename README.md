@@ -8,7 +8,7 @@ Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati
 
 - Docker (Docker Desktop on macOS or Windows with WSL; Docker Engine on Linux), about 4 GB free RAM for the local model
 - A Konnect account with AI Gateway ([pricing and plans](https://konghq.com/pricing))
-- [mise](https://mise.jdx.dev) for the pinned tools (`kongctl`, `jq`, `gitleaks`), or install them yourself
+- [mise](https://mise.jdx.dev) for the pinned tools (`kongctl` 1.25.0, `jq` 1.8.2, `gitleaks` 8.30.1; checksums in `mise.lock`), or install those versions yourself
 
 ## Start here: 000 Setup
 
@@ -32,6 +32,8 @@ make test                     # no key -> 401, shop-app key -> an answer from th
 The fictional company in every episode is **Acme**, an online retailer. Its people, teams and systems stay the same across the series.
 
 ## Rules every episode follows
+
+- Every tool and image is pinned to an exact version: tools in `mise.toml` and `mise.lock`, container images by tag and digest, CI actions by commit. Versions are bumped on purpose, in one change, never left floating.
 
 - Each episode adds its own resources to Acme's gateway with names prefixed by its id (`llm02-...`), and `make down` removes only those. Episodes never use `kongctl sync`, which would delete other episodes' resources.
 - Ollama is the default model and needs no paid keys. Where an episode needs a paid provider, the post says so in a "Cost to run" line.

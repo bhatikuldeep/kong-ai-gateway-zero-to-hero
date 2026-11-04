@@ -4,7 +4,7 @@ name: acme-aigw
 
 services:
   ollama:
-    image: ollama/ollama:0.40.11            # pin by digest after the first pull (see README)
+    image: ollama/ollama:0.40.14@sha256:ebaef4f4c5d93660e1f25f8ad085a112f51ccfb0e8458073e71793959dba91c9
     restart: unless-stopped
     volumes:
       - ollama:/root/.ollama
@@ -14,7 +14,8 @@ services:
       retries: 20
 
   kong:
-    image: kong/kong-ai-gateway:${AIGW_VERSION:-2.3.0}   # must match the control plane version (make version)
+    # Must match the AI Gateway control plane version in Konnect. Tag and digest pinned together.
+    image: kong/kong-ai-gateway:2.3.0@sha256:2df49fc79121506cf53976e9f00d1d550ed2aee5a91f0ddb86d9927947308eee
     restart: unless-stopped
     depends_on:
       ollama:
