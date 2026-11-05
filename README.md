@@ -46,7 +46,6 @@ Every part has its own folder (`01-setup/`, then `02-<topic>/` and so on) with t
 
 - **`make test` finds no Kong gateway:** run `make up`. If port 8000 is already in use, set `GATEWAY_PORT` in `.env` and run `make up` again.
 - **The first answer takes a second or two:** the model is loading. Later answers take a few hundred milliseconds.
-- **The gateway logs show `dynamic_pricing: ... ignored unknown field` notices:** they're harmless. AI Gateway 2.3 fetches Konnect's model price list every minute and skips fields it doesn't know yet.
 
 ## Licence
 
