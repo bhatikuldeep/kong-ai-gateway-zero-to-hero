@@ -6,7 +6,7 @@ Runnable code for a series of curated, hands-on blog posts at [kuldeepbhati.com]
 
 | Part | Folder | Post |
 |---|---|---|
-| 1. Setup | [`01-setup/`](01-setup/) | [Your first governed LLM endpoint with Kong AI Gateway and Konnect](https://kuldeepbhati.com/posts/part-1-governed-llm-endpoint-kong-ai-gateway-konnect/) |
+| 1. Setup | [`01-setup/`](01-setup/) | [Your first governed LLM endpoint with Konnect](https://kuldeepbhati.com/posts/hands-on-kong-ai-gateway-part-1-governed-llm-endpoint/) |
 
 > A personal series. Views are my own; this is not official Kong documentation.
 
