@@ -1,4 +1,4 @@
-# 000 Setup. Four commands, the same in every episode: up, test, down, clean.
+# Part 1, Setup. Four commands, the same in every part: up, test, down, clean.
 SHELL := /bin/bash
 # Run through mise when it's installed, so the pinned tool versions are used even if mise isn't activated.
 RUN := $(shell command -v mise >/dev/null 2>&1 && echo "mise exec --")

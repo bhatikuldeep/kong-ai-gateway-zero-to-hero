@@ -18,6 +18,9 @@ check() { if [ "$2" = "$3" ]; then echo "PASS  $1"; else echo "FAIL  $1 (expecte
 code=$(curl -s -o /dev/null -w '%{http_code}' $url -H 'content-type: application/json' -d "$body")
 check "no API key is rejected" "$code" 401
 
+code=$(curl -s -o /dev/null -w '%{http_code}' "$url?apikey=${SHOP_APP_KEY}" -H 'content-type: application/json' -d "$body")
+check "API key in the URL is rejected" "$code" 401
+
 resp=$(curl -s -D /tmp/acme-h -w '\n%{http_code} %{time_total}' $url -H 'content-type: application/json' -H "apikey: ${SHOP_APP_KEY}" -d "$body")
 read -r code total <<<"$(tail -n1 <<<"$resp")"
 check "shop-app key gets an answer" "$code" 200

@@ -1,4 +1,4 @@
-# Tool versions for every episode: latest stable releases, pinned exactly. `mise install` once.
+# Tool versions for every part: latest stable releases, pinned exactly. `mise install` once.
 # Bump deliberately (one PR), never float.
 min_version = "2026.9.9"
 

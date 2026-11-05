@@ -1,5 +1,5 @@
-# 000 Setup: Acme's AI Gateway in Konnect, applied with kongctl (apply only, never sync).
-# Every later episode adds its own resources to this gateway, prefixed with the episode id.
+# Part 1, Setup: Acme's AI Gateway in Konnect, applied with kongctl (apply only, never sync).
+# Every later part adds its own resources to this gateway, in its own namespace.
 _defaults:
   kongctl:
     namespace: acme
@@ -32,7 +32,8 @@ ai_gateways:
         type: key-auth
         config:
           key_names: [apikey]
-          hide_credentials: true
+          key_in_query: false              # the default also accepts ?apikey=, which ends up in access logs
+          hide_credentials: true           # strip the key before the request reaches the model
 
     models:
       - ref: setup-chat

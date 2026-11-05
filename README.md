@@ -2,11 +2,11 @@
 
 ## Overview
 
-Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati.com). Each episode is one use case on Kong AI Gateway 2.x: Konnect as the control plane, a self-hosted data plane in Docker, and an open model served by Ollama next to the gateway. The examples follow **Acme**, a fictional online retailer.
+Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati.com). Each part is one use case on Kong AI Gateway 2.x: Konnect as the control plane, a self-hosted data plane in Docker, and an open model served by Ollama next to the gateway. The examples follow **Acme**, a fictional online retailer.
 
-| Episode | Folder | Status |
+| Part | Folder | Status |
 |---|---|---|
-| 000 Setup | [`000-setup/`](000-setup/) | Ready to run. The post is being written |
+| 1. Setup | [`01-setup/`](01-setup/) | Ready to run. The post is being written |
 
 > A personal series. Views are my own; this is not official Kong documentation.
 
@@ -25,15 +25,15 @@ Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati
    mise install
    ```
 
-2. Run episode 000 Setup. It creates the AI Gateway that every later episode builds on:
+2. Run part 1, Setup. It creates the AI Gateway that every later part builds on:
 
    ```bash
-   cd 000-setup
+   cd 01-setup
    make up      # shows the Konnect changes and asks you to confirm
    make test    # checks that everything works
    ```
 
-Every episode folder has the same four commands:
+Every part has its own folder (`01-setup/`, then `02-<topic>/` and so on) with the same four commands:
 
 | Command | What it does |
 |---|---|

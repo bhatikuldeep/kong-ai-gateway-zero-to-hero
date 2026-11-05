@@ -1,5 +1,5 @@
-# 000 Setup: the shared stack. A Kong AI Gateway data plane connected to Konnect, and Ollama.
-# Later episodes add services with compose profiles; this file stays the base.
+# Part 1, Setup: the shared stack. A Kong AI Gateway data plane connected to Konnect, and Ollama.
+# Later parts add services with compose profiles; this file stays the base.
 name: acme-aigw
 
 services:
@@ -32,7 +32,7 @@ services:
       retries: 120                           # the first start downloads the model
 
   kong:
-    # Must match the AI Gateway control plane version in Konnect. Tag and digest pinned together.
+    # Same major.minor as the AI Gateway control plane in Konnect (patch versions may differ from 2.3). Tag and digest pinned together.
     image: kong/kong-ai-gateway:2.3.0@sha256:2df49fc79121506cf53976e9f00d1d550ed2aee5a91f0ddb86d9927947308eee
     restart: unless-stopped
     depends_on:

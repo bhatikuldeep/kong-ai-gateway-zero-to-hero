@@ -2,6 +2,6 @@
 .env
 *.key
 *.pem
-000-setup/certs/
+01-setup/certs/
 plan*.json
 .DS_Store

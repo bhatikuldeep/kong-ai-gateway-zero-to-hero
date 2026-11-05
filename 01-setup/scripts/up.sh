@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# make up: everything needed to run 000, in order. Safe to run again: it only changes what's missing.
+# make up: everything needed to run part 1, in order. Safe to run again: it only changes what's missing.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 env_file=../.env
@@ -10,6 +10,11 @@ for tool in kongctl jq; do
   command -v "$tool" >/dev/null || { echo "$tool not found: install mise, then run 'mise install' in the repository root"; exit 1; }
 done
 docker info >/dev/null 2>&1 || { echo "Docker is not running"; exit 1; }
+# Add settings that are new in .env.example since you created .env, with their defaults
+while IFS= read -r line; do
+  key=${line%%=*}
+  grep -q "^${key}=" "$env_file" || { echo "$line" >> "$env_file"; echo "Added ${key} to .env (new setting)"; }
+done < <(grep -E '^[A-Z_]+=' ../.env.example)
 set -a; source "$env_file"; set +a
 [ -n "${KONNECT_TOKEN:-}" ] || { echo "Set KONNECT_TOKEN in .env"; exit 1; }
 
@@ -20,7 +25,7 @@ mkdir -p certs
 [ -n "${SHOP_APP_KEY:-}" ] || { set_env SHOP_APP_KEY "$(openssl rand -hex 16)"; set -a; source "$env_file"; set +a; }
 
 # 3. Acme's AI Gateway in Konnect: show the changes, then apply them
-#    (--base-dir lets !file read the certificate in 000-setup/certs and nothing outside 000-setup/)
+#    (--base-dir lets !file read the certificate in 01-setup/certs and nothing outside 01-setup/)
 kongctl plan --mode apply -f konnect/ai-gateway.yaml --base-dir . \
   --pat "$KONNECT_TOKEN" --region "$KONNECT_REGION" --output-file plan.json
 if [ "$(jq '.summary.total_changes' plan.json)" -gt 0 ]; then
@@ -37,7 +42,7 @@ gw=$(curl -sf -H "Authorization: Bearer ${KONNECT_TOKEN}" \
 [ -n "$gw" ] || { echo "acme-ai-gateway not found in Konnect"; exit 1; }
 cp_host=$(jq -r '.endpoints.configuration' <<<"$gw" | sed 's#^https://##; s#/.*##')
 tp_host=$(jq -r '.endpoints.telemetry' <<<"$gw" | sed 's#^https://##; s#/.*##')
-set_env AI_GATEWAY_ID "$(jq -r '.id' <<<"$gw")"   # later episodes attach to this gateway
+set_env AI_GATEWAY_ID "$(jq -r '.id' <<<"$gw")"   # later parts attach to this gateway
 set_env KONG_CLUSTER_CONTROL_PLANE "${cp_host}:443"
 set_env KONG_CLUSTER_SERVER_NAME "${cp_host}"
 set_env KONG_CLUSTER_TELEMETRY_ENDPOINT "${tp_host}:443"
