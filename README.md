@@ -12,7 +12,7 @@ Runnable code for a series of curated, hands-on blog posts at [kuldeepbhati.com]
 
 ## Prerequisites
 
-- Docker (Docker Desktop on macOS or Windows with WSL; Docker Engine on Linux), about 2 GB free RAM
+- Docker. Run with OrbStack on macOS; the images are published for amd64 and arm64. The two containers use about 1.2 GB of memory
 - A Konnect account with AI Gateway ([pricing and plans](https://konghq.com/pricing))
 - [mise](https://mise.jdx.dev), which installs the pinned tools (`kongctl`, `jq`, `gitleaks`)
 
