@@ -4,9 +4,9 @@
 
 Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati.com). Each part is one use case on Kong AI Gateway 2.x: Konnect as the control plane, a self-hosted data plane in Docker, and an open model served by Ollama next to the gateway. The examples follow **Acme**, a fictional online retailer.
 
-| Part | Folder | Status |
+| Part | Folder | Post |
 |---|---|---|
-| 1. Setup | [`01-setup/`](01-setup/) | Ready to run. The post is being written |
+| 1. Setup | [`01-setup/`](01-setup/) | [Your first governed LLM endpoint with Kong AI Gateway and Konnect](https://kuldeepbhati.com/posts/part-1-governed-llm-endpoint-kong-ai-gateway-konnect/) |
 
 > A personal series. Views are my own; this is not official Kong documentation.
 
