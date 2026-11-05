@@ -1,8 +1,8 @@
-# Kong AI Gateway, from first call to production
+# Hands-on Kong AI Gateway
 
 ## Overview
 
-Runnable companion to the blog series at [kuldeepbhati.com](https://kuldeepbhati.com). Each part is one use case on Kong AI Gateway 2.x: Konnect as the control plane, a self-hosted data plane in Docker, and an open model served by Ollama next to the gateway. The examples follow **Acme**, a fictional online retailer.
+Runnable code for a series of curated, hands-on blog posts at [kuldeepbhati.com](https://kuldeepbhati.com). Each part is one use case on Kong AI Gateway 2.x: Konnect as the control plane, a self-hosted data plane in Docker, and an open model served by Ollama next to the gateway. The examples follow **Acme**, a fictional online retailer.
 
 | Part | Folder | Post |
 |---|---|---|
