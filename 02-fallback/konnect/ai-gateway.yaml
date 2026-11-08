@@ -1,0 +1,58 @@
+# Part 2, Fallback: a model that answers with Ollama first and fails over to Claude.
+# Added to the AI Gateway from Part 1, in its own kongctl namespace, so `make clean` here
+# removes only what this part created. Part 1's acme-chat is left as it is.
+_defaults:
+  kongctl:
+    namespace: acme-fallback
+
+ai_gateway_model_providers:
+  - ref: fallback-anthropic
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: fallback-anthropic
+    display_name: Anthropic
+    type: anthropic
+    config:
+      auth:
+        type: basic
+        headers:
+          - name: x-api-key
+            value: !secret {source: !env ANTHROPIC_API_KEY}   # stored in Konnect; never in apps or git
+
+ai_gateway_models:
+  - ref: fallback-chat
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: fallback-chat
+    display_name: Acme chat with fallback
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats:
+      - type: openai                       # apps keep the OpenAI format; Kong translates for Claude
+    config:
+      balancer:
+        algorithm: priority                # highest weight first; lower weights only when it fails
+        failover_criteria: [error, timeout, http_429, http_5xx]
+        connect_timeout: 2000              # ms; a stopped container fails fast instead of after 60 s
+        read_timeout: 120000               # ms; a small model on CPU can be slow on first call
+        max_fails: 1                       # after one failure, skip the target ...
+        fail_timeout: 10000                # ... for 10 s, then try it again
+      route:
+        paths: [/v1]
+        model:
+          body_param: model
+          values: [acme-chat-fallback]
+    access:
+      auth_strategies: [setup-key-auth]    # same API keys as Part 1
+    targets:
+      - name: qwen2.5:0.5b                 # same as LLM_MODEL in .env
+        provider: setup-ollama             # Part 1's Ollama provider
+        weight: 100                        # first choice
+        config:
+          type: ollama
+          upstream_url: http://ollama:11434
+      - name: !env CLAUDE_MODEL            # set in .env, for example claude-haiku-5-5
+        provider: !ref fallback-anthropic#name
+        weight: 10                         # fallback
+        config:
+          type: anthropic
+          max_tokens: 256
