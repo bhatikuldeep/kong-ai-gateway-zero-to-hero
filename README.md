@@ -6,7 +6,7 @@ Runnable code for a series of curated, hands-on blog posts at [kuldeepbhati.com]
 
 | Part | Folder | Post |
 |---|---|---|
-| 1. Setup | [`01-setup/`](01-setup/) | [Proxy and secure your first LLM](https://kuldeepbhati.com/posts/part-1-proxy-secure-first-llm-kong-ai-gateway/) |
+| 1. Setup | [`01-setup/`](01-setup/) | [Proxy and secure your first LLM](https://kuldeepbhati.com/posts/proxy-secure-first-llm-kong-ai-gateway/) |
 
 > A personal series. Views are my own; this is not official Kong documentation.
 
