@@ -13,6 +13,7 @@ while IFS= read -r line; do
   grep -q "^${key}=" "$env_file" || { echo "$line" >> "$env_file"; echo "Added ${key} to .env (new setting)"; }
 done < <(grep -E '^[A-Z_]+=' ../.env.example)
 set -a; source "$env_file"; set +a
+export KONGCTL_DEFAULT_KONNECT_PAT="${KONNECT_TOKEN:-}"   # kongctl reads the token from here, never from the command line
 
 # Part 1 must be running: this part adds to its gateway and uses its containers
 [ -n "${AI_GATEWAY_ID:-}" ] || { echo "Run Part 1 first: cd ../01-setup && make up"; exit 1; }
@@ -22,11 +23,22 @@ docker compose -p acme-aigw ps --status running --services 2>/dev/null | grep -q
 [ -n "${CLAUDE_MODEL:-}" ] || { echo "Set CLAUDE_MODEL in .env"; exit 1; }
 
 kongctl plan --mode apply -f konnect/ai-gateway.yaml \
-  --pat "$KONNECT_TOKEN" --region "$KONNECT_REGION" --output-file plan.json
+  --region "$KONNECT_REGION" --output-file plan.json
 if [ "$(jq '.summary.total_changes' plan.json)" -gt 0 ]; then
-  kongctl apply --plan plan.json --pat "$KONNECT_TOKEN" --region "$KONNECT_REGION"
+  kongctl apply --plan plan.json --region "$KONNECT_REGION"
 else
   echo "Konnect is up to date"
 fi
 rm -f plan.json
-echo "Ready: run 'make test' (the data plane picks up the change within a few seconds)"
+
+# Wait until the data plane has the new model (it polls Konnect for configuration)
+url=http://127.0.0.1:${GATEWAY_PORT:-8000}/v1/chat/completions
+body='{"model": "acme-chat-fallback", "messages": [{"role": "user", "content": "ping"}]}'
+for _ in $(seq 1 30); do
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$url" -H 'content-type: application/json' \
+    -H @<(printf "apikey: %s\n" "$SHOP_APP_KEY") -d "$body")
+  [ "$code" = 200 ] && { echo "Ready: run 'make test'"; exit 0; }
+  sleep 2
+done
+echo "The data plane hasn't picked up the change after 60 s (last status ${code}): check 'docker compose -p acme-aigw logs kong'"
+exit 1

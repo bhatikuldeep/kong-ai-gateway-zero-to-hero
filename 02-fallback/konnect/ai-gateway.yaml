@@ -18,6 +18,20 @@ ai_gateway_model_providers:
           - name: x-api-key
             value: !secret {source: !env ANTHROPIC_API_KEY}   # stored in Konnect; never in apps or git
 
+ai_gateway_policies:
+  # Anthropic answers with headers that identify your Anthropic account. Without this policy they
+  # reach every app that calls the gateway. Attached to the fallback model only (global: false).
+  - ref: fallback-hide-provider-headers
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: fallback-hide-provider-headers
+    display_name: Hide provider account headers
+    type: response-transformer
+    enabled: true
+    global: false
+    config:
+      remove:
+        headers: [anthropic-organization-id, anthropic-workspace-id]
+
 ai_gateway_models:
   - ref: fallback-chat
     ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
@@ -43,6 +57,7 @@ ai_gateway_models:
           values: [acme-chat-fallback]
     access:
       auth_strategies: [setup-key-auth]    # same API keys as Part 1
+    policies: [ !ref fallback-hide-provider-headers#name ]
     targets:
       - name: qwen2.5:0.5b                 # same as LLM_MODEL in .env
         provider: setup-ollama             # Part 1's Ollama provider
