@@ -7,6 +7,8 @@ Runnable code for a series of curated, hands-on blog posts at [kuldeepbhati.com]
 | Part | Folder | Post |
 |---|---|---|
 | 1. Setup | [`01-setup/`](01-setup/) | [Proxy and secure your first LLM](https://kuldeepbhati.com/posts/proxy-secure-first-llm-kong-ai-gateway/) |
+| 2. Fallback | [`02-fallback/`](02-fallback/) | [Set up LLM fallback](https://kuldeepbhati.com/posts/llm-fallback-kong-ai-gateway/) |
+| Optional: Grafana | [`observability/`](observability/) | Metrics, traces and logs for every part ([Part 1, Step 4](https://kuldeepbhati.com/posts/proxy-secure-first-llm-kong-ai-gateway/#step-4-see-it-in-grafana-optional)) |
 
 > A personal series. Views are my own; this is not official Kong documentation.
 
@@ -41,6 +43,10 @@ Every part has its own folder (`01-setup/`, then `02-<topic>/` and so on) with t
 | `make test` | Check that everything works |
 | `make down` | Stop the containers |
 | `make clean` | Remove everything: containers, downloaded model and the gateway in Konnect |
+
+## Optional: see it in Grafana
+
+`observability/` starts Prometheus, Loki, Tempo, an OpenTelemetry Collector, Grafana Alloy and Grafana with Kong's official AI Gateway dashboard next to Part 1, and adds the metrics and tracing policies to the gateway. It uses the same four commands; run it after Part 1, at any part. See [`observability/README.md`](observability/README.md).
 
 ## Troubleshooting
 

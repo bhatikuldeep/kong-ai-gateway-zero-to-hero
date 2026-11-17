@@ -16,6 +16,7 @@ while IFS= read -r line; do
   grep -q "^${key}=" "$env_file" || { echo "$line" >> "$env_file"; echo "Added ${key} to .env (new setting)"; }
 done < <(grep -E '^[A-Z_]+=' ../.env.example)
 set -a; source "$env_file"; set +a
+export KONGCTL_DEFAULT_KONNECT_PAT="${KONNECT_TOKEN:-}"   # kongctl reads the token from here, never from the command line
 [ -n "${KONNECT_TOKEN:-}" ] || { echo "Set KONNECT_TOKEN in .env"; exit 1; }
 
 # 2. Data plane certificate and the shop app's API key (created once)
@@ -27,16 +28,16 @@ mkdir -p certs
 # 3. Acme's AI Gateway in Konnect: show the changes, then apply them
 #    (--base-dir lets !file read the certificate in 01-setup/certs and nothing outside 01-setup/)
 kongctl plan --mode apply -f konnect/ai-gateway.yaml --base-dir . \
-  --pat "$KONNECT_TOKEN" --region "$KONNECT_REGION" --output-file plan.json
+  --region "$KONNECT_REGION" --output-file plan.json
 if [ "$(jq '.summary.total_changes' plan.json)" -gt 0 ]; then
-  kongctl apply --plan plan.json --pat "$KONNECT_TOKEN" --region "$KONNECT_REGION"
+  kongctl apply --plan plan.json --region "$KONNECT_REGION"
 else
   echo "Konnect is up to date"
 fi
 rm -f plan.json
 
 # 4. The gateway's connection details, looked up by name (an org can have several gateways)
-gw=$(curl -sf -H "Authorization: Bearer ${KONNECT_TOKEN}" \
+gw=$(curl -sf -H @<(printf "Authorization: Bearer %s\n" "$KONNECT_TOKEN") \
   "https://${KONNECT_REGION}.api.konghq.com/v1/ai-gateways?page%5Bsize%5D=100" \
   | jq -c '.data[] | select(.name=="acme-ai-gateway")')
 [ -n "$gw" ] || { echo "acme-ai-gateway not found in Konnect"; exit 1; }

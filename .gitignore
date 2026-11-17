@@ -5,3 +5,4 @@
 01-setup/certs/
 plan*.json
 .DS_Store
+observability/grafana/dashboards/

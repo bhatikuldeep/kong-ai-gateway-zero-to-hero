@@ -53,6 +53,15 @@ services:
       KONG_CLUSTER_CERT: /certs/tls.crt
       KONG_CLUSTER_CERT_KEY: /certs/tls.key
       KONG_LUA_SSL_TRUSTED_CERTIFICATE: system
+      # For the optional Grafana stack (../observability): metrics on the Status API (inside the Docker
+      # network only), and a trace for every request. Nothing is exported until its policies exist.
+      KONG_STATUS_LISTEN: 0.0.0.0:8100
+      KONG_TRACING_INSTRUMENTATIONS: all
+      KONG_TRACING_SAMPLING_RATE: "1.0"
+      # Kong caches a DNS answer for its TTL, and Docker answers with 600 s. Without this, a recreated
+      # container (the Collector after `make down` and `make up`) gets a new IP that Kong only sees
+      # up to 10 minutes later. 30 s here; in Kubernetes a Service name keeps its IP.
+      KONG_DNS_VALID_TTL: "30"
     volumes:
       - ./certs:/certs:ro
     # The image checks health every 60 s, so `make up` would wait a minute for a gateway that is ready in seconds.
