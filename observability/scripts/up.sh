@@ -16,12 +16,15 @@ done < <(grep -E '^[A-Z_]+=' ../.env.example)
 set -a; source "$env_file"; set +a
 export KONGCTL_DEFAULT_KONNECT_PAT="${KONNECT_TOKEN:-}"   # kongctl reads the token from here, never from the command line
 
-# Part 1 must be running, with the Status API (port 8100) that Prometheus scrapes
+# Part 1 must be running, with the Status API (port 8100) that Prometheus scrapes and a short DNS cache
 [ -n "${AI_GATEWAY_ID:-}" ] || { echo "Run Part 1 first: cd ../01-setup && make up"; exit 1; }
 docker compose -p acme-aigw ps --status running --services 2>/dev/null | grep -qx kong \
   || { echo "Part 1's containers aren't running: cd ../01-setup && make up"; exit 1; }
-docker inspect acme-aigw-kong-1 --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^KONG_STATUS_LISTEN=' \
-  || { echo "Part 1's data plane predates the Grafana stack: run 'make up' in ../01-setup once to update it"; exit 1; }
+dp_env=$(docker inspect acme-aigw-kong-1 --format '{{range .Config.Env}}{{println .}}{{end}}')
+for setting in KONG_STATUS_LISTEN KONG_DNS_VALID_TTL; do
+  grep -q "^${setting}=" <<<"$dp_env" \
+    || { echo "Part 1's data plane has no ${setting} yet: run 'make up' in ../01-setup once to update it"; exit 1; }
+done
 
 # Grafana admin password (created once, kept in .env)
 [ -n "${GRAFANA_ADMIN_PASSWORD:-}" ] || { set_env GRAFANA_ADMIN_PASSWORD "$(openssl rand -hex 12)"; set -a; source "$env_file"; set +a; }

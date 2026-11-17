@@ -28,7 +28,8 @@ Then open http://127.0.0.1:3000 (user `admin`, password `GRAFANA_ADMIN_PASSWORD`
 
 Notes:
 
-- Part 1's data plane must have the Status API (`KONG_STATUS_LISTEN`). If you ran Part 1 before this folder existed, run `make up` in `../01-setup` once.
+- Part 1's data plane must have the Status API (`KONG_STATUS_LISTEN`) and a short DNS cache (`KONG_DNS_VALID_TTL`). If you ran Part 1 before this folder existed, run `make up` in `../01-setup` once.
+- Without the short DNS cache, traces and traffic logs stop for up to 10 minutes after `make down` and `make up`: the Collector gets a new IP, and Kong keeps the old one for the 600 s TTL that Docker's DNS gives. Kong's log shows `[otel] failed to send request: connection refused`.
 - Loki's default limit is 128 structured metadata entries per line; a Kong access log line has about 133, so `loki/loki.yaml` raises it. Without that, Loki rejects every line and only the Collector's log shows it.
 - Alloy reads the Docker socket read-only and only containers of the `acme-aigw` compose project.
 - Everything listens on 127.0.0.1 or inside the Docker network. Grafana keeps its admin login.
