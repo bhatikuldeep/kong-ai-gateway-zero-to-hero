@@ -45,7 +45,10 @@ ai_gateway_models:
     config:
       balancer:
         algorithm: priority                # highest weight first; lower weights only when it fails
-        failover_criteria: [error, timeout, http_429, http_5xx]
+        # error and timeout: the model can't be reached. http_429/http_5xx: it answered with that status.
+        # Chat requests are POSTs, and Kong only retries a POST that reached the model with non_idempotent;
+        # without it a 429 or 503 goes back to the app (tested 2026-11-17).
+        failover_criteria: [error, timeout, http_429, http_5xx, non_idempotent]
         connect_timeout: 2000              # ms; a stopped container fails fast instead of after 60 s
         read_timeout: 120000               # ms; a small model on CPU can be slow on first call
         max_fails: 1                       # after one failure, skip the target ...

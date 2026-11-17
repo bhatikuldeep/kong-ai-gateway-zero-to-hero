@@ -26,11 +26,13 @@ read -r code model ms gw <<<"$(ask)"
 check "Ollama answers first" "$code $model" "200 ollama/${LLM_MODEL}"
 
 echo "      stopping Ollama ..."
-$compose stop ollama >/dev/null
+$compose stop ollama >/dev/null 2>&1
 read -r code model ms gw <<<"$(ask)"
 check "Ollama down: Claude answers" "$code $model" "200 anthropic/${CLAUDE_MODEL}"
 echo "      first request after the outage: ${ms} ms, of which ${gw} ms waiting for Ollama (connect_timeout)"
-check "Anthropic account headers removed" "$(grep -ciE '^anthropic-(organization|workspace)-id:' /tmp/acme-h)" "0"
+if [ "$code" = 200 ]; then  # only meaningful on an answer from Claude
+  check "Anthropic account headers removed" "$(grep -ciE '^anthropic-(organization|workspace)-id:' /tmp/acme-h)" "0"
+fi
 for i in 1 2 3; do
   read -r code model ms gw <<<"$(ask)"
   check "request $((i + 1)) during the outage: Claude answers" "$code $model" "200 anthropic/${CLAUDE_MODEL}"
@@ -38,7 +40,7 @@ for i in 1 2 3; do
 done
 
 echo "      starting Ollama again ..."
-$compose start ollama >/dev/null
+$compose start ollama >/dev/null 2>&1
 until [ "$(docker inspect -f '{{.State.Health.Status}}' acme-aigw-ollama-1 2>/dev/null)" = healthy ]; do sleep 1; done
 sleep 11   # fail_timeout is 10 s: after it, Kong tries Ollama again
 read -r code model ms gw <<<"$(ask)"
