@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  # Kong AI Gateway data plane: Status API /metrics (Prometheus policy with ai_metrics: true)
+  - job_name: kong-ai-gateway
+    static_configs:
+      - targets: ["kong:8100"]

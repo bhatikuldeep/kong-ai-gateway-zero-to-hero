@@ -1,0 +1,31 @@
+# Optional Grafana stack: two global policies on Acme's AI Gateway, in their own kongctl namespace,
+# so `make clean` here removes only these. Metrics are scraped from the Status API; traces and access
+# logs are pushed to the Collector over OTLP/HTTP.
+_defaults:
+  kongctl:
+    namespace: acme-observability
+
+ai_gateway_policies:
+  - ref: obs-prometheus
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: obs-prometheus
+    display_name: Prometheus metrics
+    type: prometheus
+    enabled: true
+    global: true
+    config:
+      ai_metrics: true            # kong_ai_llm_* metrics: requests, tokens, cost, provider latency
+      status_code_metrics: true
+      latency_metrics: true
+
+  - ref: obs-opentelemetry
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: obs-opentelemetry
+    display_name: OpenTelemetry traces and logs
+    type: opentelemetry
+    enabled: true
+    global: true
+    config:
+      traces_endpoint: http://otel-collector:4318/v1/traces
+      access_logs:
+        endpoint: http://otel-collector:4318/v1/logs
