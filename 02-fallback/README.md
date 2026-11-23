@@ -58,3 +58,8 @@ docker compose exec mock-llm wget -qO- http://127.0.0.1:8081/up/prio-primary
 | `make clean` | Remove the two containers, the embeddings model and everything this part added in Konnect. Part 1's gateway stays |
 
 Stop this part before Part 1: Part 1's `make down` can't remove its Docker network while these containers use it.
+
+## Troubleshooting
+
+- **Semantic routing returns 503 or 500 on every request.** The data plane writes the target descriptions to the vector store when it loads the configuration. If the store was empty or unreachable then, restart the data plane: `docker compose -p acme-aigw restart kong`. The store is on a volume, so `make down` and `make up` keep it.
+- **A model fails for some requests right after a container restart.** A worker process can cache that a stopped container's name didn't resolve; it recovers within seconds.

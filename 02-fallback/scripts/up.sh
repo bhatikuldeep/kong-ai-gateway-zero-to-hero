@@ -47,6 +47,10 @@ for model in acme-chat-fallback acme-lb-semantic; do
     [ "$code" = 200 ] && break
     sleep 2
   done
-  [ "$code" = 200 ] || { echo "The data plane hasn't picked up $model after 60 s (last status ${code}): check 'docker compose -p acme-aigw logs kong'"; exit 1; }
+  if [ "$code" != 200 ]; then
+    echo "The data plane hasn't picked up $model after 60 s (last status ${code}): check 'docker compose -p acme-aigw logs kong'"
+    [ "$model" = acme-lb-semantic ] && echo "Semantic routing loads the vector store once, with the configuration. If it couldn't reach the store then, restart the data plane: docker compose -p acme-aigw restart kong"
+    exit 1
+  fi
 done
 echo "Ready: run 'make test'"

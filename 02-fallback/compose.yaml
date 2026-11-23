@@ -18,11 +18,21 @@ services:
   vectors:
     image: redis/redis-stack-server:7.4.0-v8@sha256:798ab84d9f266936b034ab11c4d04a2b8e4b441884c5aa7d17ac951eefdf742a
     restart: unless-stopped
+    # Kong writes each target's description to the vector store when it loads the configuration, and doesn't
+    # write it again on its own. Without persistence, a restarted store is empty and every semantic request
+    # fails with 503 ("No peers are available") until the data plane reloads. make clean removes the volume.
+    environment:
+      REDIS_ARGS: --appendonly yes
+    volumes:
+      - vectors:/data
     networks: [acme]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
       retries: 20
+
+volumes:
+  vectors: {}
 
 networks:
   acme:
