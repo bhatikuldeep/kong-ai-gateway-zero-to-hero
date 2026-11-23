@@ -1,0 +1,197 @@
+# Part 2, load balancing: one AI Model per strategy, on the same endpoint as acme-chat (/v1), picked
+# by the model name the app sends. The targets are stand-in models (../../mocks/llm) that say who answered,
+# so you can see each strategy at work without paying for tokens. Same namespace as ai-gateway.yaml.
+_defaults:
+  kongctl:
+    namespace: acme-fallback
+
+ai_gateway_model_providers:
+  - ref: lb-mock
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-mock
+    display_name: Stand-in models (Part 2)
+    type: openai
+    config:
+      auth:
+        type: basic                        # the stand-in needs no key
+
+ai_gateway_models:
+  # 1. The recommended default: a primary and a standby. Priority sends everything to the highest
+  #    weight; the standby only answers when the primary fails. The circuit breaker stops Kong from
+  #    trying a failing primary on every request.
+  - ref: lb-priority
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-priority
+    display_name: "Load balancing: priority with failover"
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats: [{type: openai}]
+    config:
+      balancer:
+        algorithm: priority
+        failover_criteria: [error, timeout, http_429, http_5xx, non_idempotent]
+        max_fails: 3                       # after 3 failures, skip the target ...
+        fail_timeout: 10000                # ... for 10 s (ms), then try it once more
+        connect_timeout: 2000
+      route: {paths: [/v1], model: {body_param: model, values: [acme-lb-priority]}}
+    access: {auth_strategies: [setup-key-auth]}
+    targets:
+      - {name: prio-primary, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/prio-primary/v1/chat/completions"}}
+      - {name: prio-standby, provider: !ref lb-mock#name, weight: 50, config: {type: openai, upstream_url: "http://mock-llm:8080/prio-standby/v1/chat/completions"}}
+
+  # 2. The same, without non_idempotent: chat requests are POSTs, so a 503 goes back to the app.
+  - ref: lb-no-retry
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-no-retry
+    display_name: "Load balancing: failover without non_idempotent"
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats: [{type: openai}]
+    config:
+      balancer:
+        algorithm: priority
+        failover_criteria: [error, timeout, http_429, http_5xx]
+      route: {paths: [/v1], model: {body_param: model, values: [acme-lb-no-retry]}}
+    access: {auth_strategies: [setup-key-auth]}
+    targets:
+      - {name: nr-primary, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/nr-primary/v1/chat/completions"}}
+      - {name: nr-standby, provider: !ref lb-mock#name, weight: 50, config: {type: openai, upstream_url: "http://mock-llm:8080/nr-standby/v1/chat/completions"}}
+
+  # 3. The same as 1, without the circuit breaker (max_fails left at its default, 0).
+  - ref: lb-no-breaker
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-no-breaker
+    display_name: "Load balancing: failover without a circuit breaker"
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats: [{type: openai}]
+    config:
+      balancer:
+        algorithm: priority
+        failover_criteria: [error, timeout, http_429, http_5xx, non_idempotent]
+      route: {paths: [/v1], model: {body_param: model, values: [acme-lb-no-breaker]}}
+    access: {auth_strategies: [setup-key-auth]}
+    targets:
+      - {name: nb-primary, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/nb-primary/v1/chat/completions"}}
+      - {name: nb-standby, provider: !ref lb-mock#name, weight: 50, config: {type: openai, upstream_url: "http://mock-llm:8080/nb-standby/v1/chat/completions"}}
+
+  # 4. Weighted round-robin: send 10% of traffic to a candidate model before switching.
+  - ref: lb-canary
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-canary
+    display_name: "Load balancing: weighted round-robin (canary)"
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats: [{type: openai}]
+    config:
+      balancer: {algorithm: round-robin}
+      route: {paths: [/v1], model: {body_param: model, values: [acme-lb-canary]}}
+    access: {auth_strategies: [setup-key-auth]}
+    targets:
+      - {name: rr-current, provider: !ref lb-mock#name, weight: 90, config: {type: openai, upstream_url: "http://mock-llm:8080/rr-current/v1/chat/completions"}}
+      - {name: rr-candidate, provider: !ref lb-mock#name, weight: 10, config: {type: openai, upstream_url: "http://mock-llm:8080/rr-candidate/v1/chat/completions"}}
+
+  # 5. Consistent hashing on a header: the same user always reaches the same target.
+  - ref: lb-sticky
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-sticky
+    display_name: "Load balancing: consistent hashing per user"
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats: [{type: openai}]
+    config:
+      balancer: {algorithm: consistent-hashing, hash_on_header: X-Acme-User}
+      route: {paths: [/v1], model: {body_param: model, values: [acme-lb-sticky]}}
+    access: {auth_strategies: [setup-key-auth]}
+    targets:
+      - {name: sticky-a, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/sticky-a/v1/chat/completions"}}
+      - {name: sticky-b, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/sticky-b/v1/chat/completions"}}
+      - {name: sticky-c, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/sticky-c/v1/chat/completions"}}
+
+  # 6. Lowest latency: prefer the target that answers fastest (end to end). lat-slow waits 2 s.
+  - ref: lb-fastest
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-fastest
+    display_name: "Load balancing: lowest latency"
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats: [{type: openai}]
+    config:
+      balancer: {algorithm: lowest-latency, latency_strategy: e2e}
+      route: {paths: [/v1], model: {body_param: model, values: [acme-lb-fastest]}}
+    access: {auth_strategies: [setup-key-auth]}
+    targets:
+      - {name: lat-fast, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/lat-fast/v1/chat/completions"}}
+      - {name: lat-slow, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/lat-slow/v1/chat/completions"}}
+
+  # 7. Lowest usage: prefer the target that has used the fewest tokens. use-big reports 100x the tokens.
+  - ref: lb-tokens
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-tokens
+    display_name: "Load balancing: lowest token usage"
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats: [{type: openai}]
+    config:
+      balancer: {algorithm: lowest-usage, tokens_count_strategy: total-tokens}
+      route: {paths: [/v1], model: {body_param: model, values: [acme-lb-tokens]}}
+    access: {auth_strategies: [setup-key-auth]}
+    targets:
+      - {name: use-small, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/use-small/v1/chat/completions"}}
+      - {name: use-big, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/use-big/v1/chat/completions"}}
+
+  # 8. Least connections: prefer the target with the fewest requests in flight. lc-slow waits 2 s.
+  - ref: lb-least-conn
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-least-conn
+    display_name: "Load balancing: least connections"
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats: [{type: openai}]
+    config:
+      balancer: {algorithm: least-connections}
+      route: {paths: [/v1], model: {body_param: model, values: [acme-lb-least-conn]}}
+    access: {auth_strategies: [setup-key-auth]}
+    targets:
+      - {name: lc-fast, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/lc-fast/v1/chat/completions"}}
+      - {name: lc-slow, provider: !ref lb-mock#name, weight: 100, config: {type: openai, upstream_url: "http://mock-llm:8080/lc-slow/v1/chat/completions"}}
+
+  # 9. Semantic: route by what the prompt is about. Kong embeds each target's description and each
+  #    prompt with Ollama (nomic-embed-text) and picks the closest match in Redis.
+  - ref: lb-semantic
+    ai_gateway: !lookup {id: !env AI_GATEWAY_ID}
+    name: lb-semantic
+    display_name: "Load balancing: semantic routing"
+    type: model
+    enabled: true
+    capabilities: [generate]
+    formats: [{type: openai}]
+    config:
+      balancer:
+        algorithm: semantic
+        embeddings:
+          provider: setup-ollama           # Part 1's Ollama provider
+          name: nomic-embed-text
+          config: {type: ollama, upstream_url: "http://ollama:11434"}
+        vectordb: {type: redis, dimensions: 768, distance_metric: cosine, threshold: 0.8, host: vectors, port: 6379, ssl: false}
+      route: {paths: [/v1], model: {body_param: model, values: [acme-lb-semantic]}}
+    access: {auth_strategies: [setup-key-auth]}
+    targets:
+      - name: sem-orders
+        provider: !ref lb-mock#name
+        weight: 100
+        semantic_description: "Customer orders: order status, delivery, returns, refunds and payments"
+        config: {type: openai, upstream_url: "http://mock-llm:8080/sem-orders/v1/chat/completions"}
+      - name: sem-code
+        provider: !ref lb-mock#name
+        weight: 100
+        semantic_description: "Software engineering: programming languages, source code, debugging, APIs and deployments"
+        config: {type: openai, upstream_url: "http://mock-llm:8080/sem-code/v1/chat/completions"}

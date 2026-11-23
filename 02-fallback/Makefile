@@ -1,4 +1,4 @@
-# Part 2, Fallback. Four commands, the same in every part: up, test, down, clean.
+# Part 2, Load balancing and failover. Four commands, the same in every part: up, test, down, clean.
 SHELL := /bin/bash
 RUN := $(shell command -v mise >/dev/null 2>&1 && echo "mise exec --")
 
@@ -6,14 +6,14 @@ RUN := $(shell command -v mise >/dev/null 2>&1 && echo "mise exec --")
 help:    ## list the commands
 	@grep -hE '^[a-z]+:.*## ' $(firstword $(MAKEFILE_LIST)) | sed -E 's/:.*## / /' | awk '{t=$$1; $$1=""; printf "  make %-6s%s\n", t, $$0}'
 
-up:      ## add the Claude provider and the fallback model to Acme's gateway (shows the changes first)
+up:      ## start the stand-in models, add Claude and the load balancing models to Acme's gateway (shows the changes first)
 	@$(RUN) scripts/up.sh
 
-test:    ## check failover: Ollama answers, stop Ollama, Claude answers, start Ollama, Ollama answers again
+test:    ## check failover to Claude, then each load balancing strategy
 	@$(RUN) scripts/test.sh
 
-down:    ## nothing to stop: this part uses Part 1's containers
-	@echo "Part 2 adds no containers. To stop them: cd ../01-setup && make down"
+down:    ## stop this part's containers (stand-in models, vector store); Part 1 keeps running
+	@docker compose -f compose.yaml down
 
-clean:   ## remove what this part added in Konnect (Part 1's gateway stays)
+clean:   ## remove this part's containers and what it added in Konnect (Part 1's gateway stays)
 	@$(RUN) scripts/clean.sh

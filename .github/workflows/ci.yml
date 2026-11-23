@@ -20,5 +20,6 @@ jobs:
           sed -i 's/^KONG_CLUSTER_CONTROL_PLANE=.*/KONG_CLUSTER_CONTROL_PLANE=ci.invalid:443/' .env
           docker compose --env-file .env -f 01-setup/compose.yaml config -q
           GRAFANA_ADMIN_PASSWORD=ci docker compose --env-file .env -f observability/compose.yaml config -q
+          docker compose -f 02-fallback/compose.yaml config -q
       - name: Shell scripts parse
         run: for f in */scripts/*.sh; do bash -n "$f"; done

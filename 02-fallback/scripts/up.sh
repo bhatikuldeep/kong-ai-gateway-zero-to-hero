@@ -22,7 +22,13 @@ docker compose -p acme-aigw ps --status running --services 2>/dev/null | grep -q
 [ -n "${ANTHROPIC_API_KEY:-}" ] || { echo "Set ANTHROPIC_API_KEY in .env (a Claude API key from the Claude Console)"; exit 1; }
 [ -n "${CLAUDE_MODEL:-}" ] || { echo "Set CLAUDE_MODEL in .env"; exit 1; }
 
-kongctl plan --mode apply -f konnect/ai-gateway.yaml \
+# The stand-in models and the vector store, on Part 1's Docker network
+docker compose -f compose.yaml up -d --wait
+# The embeddings model for semantic routing, in Part 1's Ollama (about 270 MB, once)
+docker compose -p acme-aigw exec -T ollama ollama list </dev/null | grep -q '^nomic-embed-text' \
+  || docker compose -p acme-aigw exec -T ollama ollama pull nomic-embed-text </dev/null
+
+kongctl plan --mode apply -f konnect/ \
   --region "$KONNECT_REGION" --output-file plan.json
 if [ "$(jq '.summary.total_changes' plan.json)" -gt 0 ]; then
   kongctl apply --plan plan.json --region "$KONNECT_REGION"
@@ -31,14 +37,20 @@ else
 fi
 rm -f plan.json
 
-# Wait until the data plane has the new model (it polls Konnect for configuration)
+# Wait until the data plane has the new models (it polls Konnect for configuration)
 url=http://127.0.0.1:${GATEWAY_PORT:-8000}/v1/chat/completions
-body='{"model": "acme-chat-fallback", "messages": [{"role": "user", "content": "ping"}]}'
-for _ in $(seq 1 30); do
-  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$url" -H 'content-type: application/json' \
-    -H @<(printf "apikey: %s\n" "$SHOP_APP_KEY") -d "$body")
-  [ "$code" = 200 ] && { echo "Ready: run 'make test'"; exit 0; }
-  sleep 2
+for model in acme-chat-fallback acme-lb-semantic; do
+  for _ in $(seq 1 30); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$url" -H 'content-type: application/json' \
+      -H @<(printf "apikey: %s\n" "$SHOP_APP_KEY") \
+      -d "{\"model\": \"$model\", \"messages\": [{\"role\": \"user\", \"content\": \"Where is my order?\"}]}")
+    [ "$code" = 200 ] && break
+    sleep 2
+  done
+  if [ "$code" != 200 ]; then
+    echo "The data plane hasn't picked up $model after 60 s (last status ${code}): check 'docker compose -p acme-aigw logs kong'"
+    [ "$model" = acme-lb-semantic ] && echo "Semantic routing loads the vector store once, with the configuration. If it couldn't reach the store then, restart the data plane: docker compose -p acme-aigw restart kong"
+    exit 1
+  fi
 done
-echo "The data plane hasn't picked up the change after 60 s (last status ${code}): check 'docker compose -p acme-aigw logs kong'"
-exit 1
+echo "Ready: run 'make test'"

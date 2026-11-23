@@ -7,7 +7,7 @@ Runnable code for a series of curated, hands-on blog posts at [kuldeepbhati.com]
 | Part | Folder | Post |
 |---|---|---|
 | 1. Setup | [`01-setup/`](01-setup/) | [Proxy and secure your first LLM](https://kuldeepbhati.com/posts/proxy-secure-first-llm-kong-ai-gateway/) |
-| 2. Fallback | [`02-fallback/`](02-fallback/) | [Set up LLM fallback](https://kuldeepbhati.com/posts/llm-fallback-kong-ai-gateway/) |
+| 2. Load balancing and failover | [`02-fallback/`](02-fallback/) | [LLM load balancing and failover](https://kuldeepbhati.com/posts/llm-fallback-kong-ai-gateway/) |
 | Optional: Grafana | [`observability/`](observability/) | Metrics, traces and logs for every part ([Part 1, Step 4](https://kuldeepbhati.com/posts/proxy-secure-first-llm-kong-ai-gateway/#step-4-see-it-in-grafana-optional)) |
 
 > A personal series. Views are my own; this is not official Kong documentation.
@@ -51,6 +51,7 @@ Every part has its own folder (`01-setup/`, then `02-<topic>/` and so on) with t
 ## Troubleshooting
 
 - **`make test` finds no Kong gateway:** run `make up`. If port 8000 is already in use, set `GATEWAY_PORT` in `.env` and run `make up` again.
+- **Part 1's `make down` says `Network acme-aigw_default Resource is still in use`:** a later part's containers still use it. Run `make down` in that part first (for example `02-fallback/`).
 - **The first answer takes a second or two:** the model is loading. Later answers take a few hundred milliseconds.
 
 ## Licence
