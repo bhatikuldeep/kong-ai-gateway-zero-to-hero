@@ -33,7 +33,7 @@ services:
 
   kong:
     # Same major.minor as the AI Gateway control plane in Konnect (patch versions may differ from 2.3). Tag and digest pinned together.
-    image: kong/kong-ai-gateway:2.3.0@sha256:2df49fc79121506cf53976e9f00d1d550ed2aee5a91f0ddb86d9927947308eee
+    image: kong/kong-ai-gateway:2.3.2@sha256:891ad48a7e38de7f5d9fb672ebf3d9ea4af086ed6c8a28c228a5d8b8f8354513
     restart: unless-stopped
     depends_on:
       ollama:

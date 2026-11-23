@@ -1,5 +1,5 @@
 # Mocks
 
-Small services that play Acme's systems in the MCP parts: `support-kb` and `deploy-tool`
+Small services that play Acme's systems. `llm/`: stand-in LLM targets for Part 2 (load balancing). For the MCP parts: `support-kb` and `deploy-tool`
 (MCP servers), `orders-api` (REST with OpenAPI) and `stock-planner` (an A2A agent). Added with the
 parts that first use them.
