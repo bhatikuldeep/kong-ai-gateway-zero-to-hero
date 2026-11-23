@@ -51,7 +51,7 @@ Every part has its own folder (`01-setup/`, then `02-<topic>/` and so on) with t
 ## Troubleshooting
 
 - **`make test` finds no Kong gateway:** run `make up`. If port 8000 is already in use, set `GATEWAY_PORT` in `.env` and run `make up` again.
-- **Part 1's `make down` says the network has active endpoints:** a later part's containers still use it. Run `make down` in that part first (for example `02-fallback/`).
+- **Part 1's `make down` says `Network acme-aigw_default Resource is still in use`:** a later part's containers still use it. Run `make down` in that part first (for example `02-fallback/`).
 - **The first answer takes a second or two:** the model is loading. Later answers take a few hundred milliseconds.
 
 ## Licence

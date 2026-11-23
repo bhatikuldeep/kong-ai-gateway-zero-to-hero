@@ -88,7 +88,7 @@ echo "Consistent hashing on X-Acme-User (acme-lb-sticky)"
 r=$(tally acme-lb-sticky 10 -H 'X-Acme-User: user-7'); show "user-7, 10 requests" "$r"
 check "the same user always reaches the same target" "$(wc -l <<<"$r" | tr -d ' ')" 1
 n=$(for u in $(seq 1 12); do who acme-lb-sticky -H "X-Acme-User: user-$u"; done | sort -u | wc -l | tr -d ' ')
-range "12 users spread over the 3 targets" "$n" 2 3
+range "12 users spread over $n of the 3 targets" "$n" 2 3
 
 echo
 echo "Lowest latency (acme-lb-fastest; lat-slow waits 2 s)"

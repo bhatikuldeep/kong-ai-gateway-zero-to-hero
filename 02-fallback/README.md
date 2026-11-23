@@ -36,14 +36,16 @@ Send ten requests and see who answered:
 ```bash
 source ../.env
 for i in $(seq 10); do
-  curl -s -o /dev/null -D - http://127.0.0.1:${GATEWAY_PORT:-8000}/v1/chat/completions \
+  curl -s -o /dev/null -D - \
+    http://127.0.0.1:${GATEWAY_PORT:-8000}/v1/chat/completions \
     -H 'content-type: application/json' -H "apikey: $SHOP_APP_KEY" \
-    -d '{"model": "acme-lb-priority", "messages": [{"role": "user", "content": "Hello"}]}' \
+    -d '{"model": "acme-lb-priority",
+         "messages": [{"role": "user", "content": "Hello"}]}' \
     | grep -i '^x-kong-llm-model'
 done
 ```
 
-Make a stand-in model fail (503) and recover:
+Make a stand-in model fail (503) and recover (each command prints how many requests that target has received):
 
 ```bash
 docker compose exec mock-llm wget -qO- http://127.0.0.1:8081/down/prio-primary
@@ -57,7 +59,7 @@ docker compose exec mock-llm wget -qO- http://127.0.0.1:8081/up/prio-primary
 | `make down` | Stop this part's two containers. Part 1 keeps running |
 | `make clean` | Remove the two containers, the embeddings model and everything this part added in Konnect. Part 1's gateway stays |
 
-Stop this part before Part 1: Part 1's `make down` can't remove its Docker network while these containers use it.
+Stop this part before Part 1: Part 1's `make down` can't remove its Docker network while these containers use it (`Resource is still in use`).
 
 ## Troubleshooting
 
